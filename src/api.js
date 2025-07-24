@@ -1,4 +1,4 @@
-const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8081/api";
+const BASE_URL = "https://backend2-tueo.onrender.com/api";
 
 export const loginVendor = async (email, password) => {
   const res = await fetch(`${BASE_URL}/vendor/login`, {
