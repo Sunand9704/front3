@@ -1,4 +1,4 @@
-const BASE_URL = "https://backend2-tueo.onrender.com/api";
+const BASE_URL = "https://back3-728k.onrender.com/api";
 
 export const loginVendor = async (email, password) => {
   const res = await fetch(`${BASE_URL}/vendor/login`, {
