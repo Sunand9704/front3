@@ -1,15 +1,19 @@
-const BASE_URL = "https://back3-728k.onrender.com/api";
+const BASE_URL =  "https://back3-728k.onrender.com/api";
 
-export const loginVendor = async (email, password) => {
-  const res = await fetch(`${BASE_URL}/vendor/login`, {
+export async function loginVendor(email, password, category) {
+  const response = await fetch(`${BASE_URL}/vendor/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password, category }),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Login failed");
-  return data;
-};
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Login failed");
+  }
+  return response.json();
+}
 
 export const fetchBambooOrders = async (token) => {
   const res = await fetch(`${BASE_URL}/orders/admin/bamboo-orders`, {

@@ -57,8 +57,12 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
 
+  // Retrieve selected category from localStorage (set after login)
+  const selectedCategory = localStorage.getItem("selectedCategory");
+
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("selectedCategory");
     navigate("/login");
   };
 
@@ -98,13 +102,34 @@ const Dashboard = () => {
     fetchOrders();
   }, []);
 
+  // Filter orders by selected category
+  const filteredOrders = selectedCategory
+    ? orders.filter(order =>
+        order.items.some(
+          item =>
+            item.product &&
+            item.product.category &&
+            item.product.category === selectedCategory
+        )
+      )
+    : orders;
+
+  // Calculate summary metrics
+  const totalOrders = filteredOrders.length;
+  const completedOrders = filteredOrders.filter(order => order.status === 'delivered').length;
+  const totalRevenue = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+  // Placeholder for revenue change (implement if you have date info)
+  const revenueChange = 0;
+
+  console.log(filteredOrders);
+
   return (
     <Box sx={{ bgcolor: "#f4f6fa", minHeight: "100vh" }}>
       <AppBar position="static" color="default" elevation={1} sx={{ mb: 4 }}>
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="h6" color="primary" fontWeight={700}>
             
-            Win2Grow
+            vin2Grow
           </Typography>
           <Typography variant="h6" color="primary" fontWeight={700}>
             
@@ -118,8 +143,62 @@ const Dashboard = () => {
       </AppBar>
       <Container maxWidth="md">
         <Typography variant="h4" sx={{ mb: 3, fontWeight: 600, color: "#222" }}>
-          Bamboo Orders
+          {selectedCategory} Orders
         </Typography>
+        {/* Summary Cards */}
+        <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
+          <Card sx={{
+            flex: 1,
+            minWidth: 220,
+            bgcolor: '#fff',
+            color: '#222',
+            borderRadius: 3,
+            boxShadow: '0 4px 24px 0 rgba(34, 197, 94, 0.10), 0 1.5px 6px 0 rgba(0,0,0,0.04)',
+            border: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            p: 3
+          }}>
+            <CardContent sx={{ p: 0 }}>
+              <Typography fontSize={14} fontWeight={600} color="#22c55e" gutterBottom>
+                Total Orders
+              </Typography>
+              <Typography variant="h4" fontWeight={700} color="#222">
+                {totalOrders}
+              </Typography>
+              <Typography fontSize={13} color="#22c55e" mt={1}>
+                {completedOrders} completed
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card sx={{
+            flex: 1,
+            minWidth: 220,
+            bgcolor: '#fff',
+            color: '#222',
+            borderRadius: 3,
+            boxShadow: '0 4px 24px 0 rgba(34, 197, 94, 0.10), 0 1.5px 6px 0 rgba(0,0,0,0.04)',
+            border: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+            p: 3
+          }}>
+            <CardContent sx={{ p: 0 }}>
+              <Typography fontSize={14} fontWeight={600} color="#22c55e" gutterBottom>
+                Total Revenue
+              </Typography>
+              <Typography variant="h4" fontWeight={700} color="#222">
+                ₹{totalRevenue.toLocaleString()}
+              </Typography>
+             
+            </CardContent>
+          </Card>
+        </Box>
+        {/* End Summary Cards */}
         <Card sx={{ boxShadow: 3, borderRadius: 3 }}>
           <CardContent>
             {loading ? (
@@ -149,14 +228,14 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {orders.length === 0 ? (
+                    {filteredOrders.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={5} align="center">
-                          No bamboo orders found.
+                          No orders found for your category.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      orders.map((order) => (
+                      filteredOrders.map((order) => (
                         <TableRow
                           key={order._id}
                           sx={{

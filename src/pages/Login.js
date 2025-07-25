@@ -13,6 +13,10 @@ import {
   DialogActions,
   Alert,
   Link,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -26,6 +30,25 @@ const LOGIN_URL = "http://localhost:8081/api/vendor/login";
 const SEND_OTP_URL = "http://localhost:8081/api/vendor/send-otp";
 const VERIFY_OTP_URL = "http://localhost:8081/api/vendor/verify-otp";
 const RESET_URL = "http://localhost:8081/api/vendor/reset-password";
+
+const CATEGORY_OPTIONS = [
+ 
+  "Sanchi Stupa",
+  "Warli House",
+  "Tiger Crafting",
+  "Bamboo Peacock",
+  "Miniaure Ship",
+  "Bamboo Trophy",
+  "Bamboo Ganesha",
+  "Bamboo Swords",
+  "Tribal Mask -1",
+  "Tribal Mask -2",
+  "Bamboo Dry Fruit Tray",
+  "Bamboo Tissue Paper Holder",
+  "Bamboo Strip Tray",
+  "Bamboo Mobile Booster",
+  "Bamboo Card-Pen Holder"
+];
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -44,6 +67,7 @@ const Login = () => {
   const [newPassword, setNewPassword] = useState("");
   const [resetMsg, setResetMsg] = useState("");
   const [resetError, setResetError] = useState("");
+  const [category, setCategory] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -52,8 +76,10 @@ const Login = () => {
     setLoading(true);
     setError("");
     try {
-      const data = await loginVendor(email, password);
+      // Send category as part of login
+      const data = await loginVendor(email, password, category);
       localStorage.setItem("token", data.token);
+      localStorage.setItem("selectedCategory", category); // Store selected category
       navigate("/dashboard");
     } catch (err) {
       setError(err.message || "Login failed");
@@ -170,6 +196,21 @@ const Login = () => {
                 autoFocus
                 type="email"
               />
+              <FormControl fullWidth margin="normal">
+                <InputLabel id="category-label">Category</InputLabel>
+                <Select
+                  labelId="category-label"
+                  value={category}
+                  label="Category"
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  {CATEGORY_OPTIONS.map((cat) => (
+                    <MenuItem key={cat} value={cat}>
+                      {cat}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <TextField
                 label="Password"
                 type="password"
