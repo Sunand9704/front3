@@ -1,4 +1,4 @@
-const BASE_URL =  "https://back3-728k.onrender.com/api";
+const BASE_URL = "http://localhost:8081/api";
 
 export async function loginVendor(email, password, category) {
   const response = await fetch(`${BASE_URL}/vendor/login`, {
@@ -15,8 +15,8 @@ export async function loginVendor(email, password, category) {
   return response.json();
 }
 
-export const fetchBambooOrders = async (token) => {
-  const res = await fetch(`${BASE_URL}/orders/admin/bamboo-orders`, {
+export const fetchAllOrders = async (token) => {
+  const res = await fetch(`${BASE_URL}/orders/admin/all`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -73,5 +73,16 @@ export const updateOrderStatus = async (orderId, status, token) => {
     throw new Error(
       data.error || data.message || "Failed to update order status"
     );
+  return data;
+};
+
+export const fetchCategories = async () => {
+  const res = await fetch(`${BASE_URL}/categories/active`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to fetch categories");
   return data;
 };

@@ -20,7 +20,7 @@ import {
   Container,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { fetchBambooOrders, updateOrderStatus } from "../api";
+import { fetchAllOrders, updateOrderStatus } from "../api";
 // Adjust if backend runs on a different port
 
 const statusColor = (status) => {
@@ -91,7 +91,9 @@ const Dashboard = () => {
       setError("");
       try {
         const token = localStorage.getItem("token") || "YOUR_ADMIN_JWT_TOKEN";
-        const data = await fetchBambooOrders(token);
+        const data = await fetchAllOrders(token);
+        console.log(data , "data");
+        
         setOrders(data);
       } catch (err) {
         setError(err.message || "Error fetching orders");
@@ -101,23 +103,29 @@ const Dashboard = () => {
     };
     fetchOrders();
   }, []);
+  console.log(selectedCategory, "selectedCategory");
 
   // Filter orders by selected category
   const filteredOrders = selectedCategory
-    ? orders.filter(order =>
+    ? orders.filter((order) =>
         order.items.some(
-          item =>
+          (item) =>
             item.product &&
             item.product.category &&
-            item.product.category === selectedCategory
+            item.product.category.toLowerCase() === selectedCategory.toLowerCase()
         )
       )
     : orders;
 
   // Calculate summary metrics
   const totalOrders = filteredOrders.length;
-  const completedOrders = filteredOrders.filter(order => order.status === 'delivered').length;
-  const totalRevenue = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+  const completedOrders = filteredOrders.filter(
+    (order) => order.status === "delivered"
+  ).length;
+  const totalRevenue = filteredOrders.reduce(
+    (sum, order) => sum + (order.totalAmount || 0),
+    0
+  );
   // Placeholder for revenue change (implement if you have date info)
   const revenueChange = 0;
 
@@ -128,12 +136,9 @@ const Dashboard = () => {
       <AppBar position="static" color="default" elevation={1} sx={{ mb: 4 }}>
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="h6" color="primary" fontWeight={700}>
-            
             vin2Grow
           </Typography>
           <Typography variant="h6" color="primary" fontWeight={700}>
-            
-          
             Vendor Panel
           </Typography>
           <Button variant="outlined" color="secondary" onClick={handleLogout}>
@@ -146,23 +151,31 @@ const Dashboard = () => {
           {selectedCategory} Orders
         </Typography>
         {/* Summary Cards */}
-        <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
-          <Card sx={{
-            flex: 1,
-            minWidth: 220,
-            bgcolor: '#fff',
-            color: '#222',
-            borderRadius: 3,
-            boxShadow: '0 4px 24px 0 rgba(34, 197, 94, 0.10), 0 1.5px 6px 0 rgba(0,0,0,0.04)',
-            border: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'flex-start',
-            p: 3
-          }}>
+        <Box sx={{ display: "flex", gap: 3, mb: 4, flexWrap: "wrap" }}>
+          <Card
+            sx={{
+              flex: 1,
+              minWidth: 220,
+              bgcolor: "#fff",
+              color: "#222",
+              borderRadius: 3,
+              boxShadow:
+                "0 4px 24px 0 rgba(34, 197, 94, 0.10), 0 1.5px 6px 0 rgba(0,0,0,0.04)",
+              border: "none",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              p: 3,
+            }}
+          >
             <CardContent sx={{ p: 0 }}>
-              <Typography fontSize={14} fontWeight={600} color="#22c55e" gutterBottom>
+              <Typography
+                fontSize={14}
+                fontWeight={600}
+                color="#22c55e"
+                gutterBottom
+              >
                 Total Orders
               </Typography>
               <Typography variant="h4" fontWeight={700} color="#222">
@@ -173,28 +186,35 @@ const Dashboard = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{
-            flex: 1,
-            minWidth: 220,
-            bgcolor: '#fff',
-            color: '#222',
-            borderRadius: 3,
-            boxShadow: '0 4px 24px 0 rgba(34, 197, 94, 0.10), 0 1.5px 6px 0 rgba(0,0,0,0.04)',
-            border: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'flex-start',
-            p: 3
-          }}>
+          <Card
+            sx={{
+              flex: 1,
+              minWidth: 220,
+              bgcolor: "#fff",
+              color: "#222",
+              borderRadius: 3,
+              boxShadow:
+                "0 4px 24px 0 rgba(34, 197, 94, 0.10), 0 1.5px 6px 0 rgba(0,0,0,0.04)",
+              border: "none",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              p: 3,
+            }}
+          >
             <CardContent sx={{ p: 0 }}>
-              <Typography fontSize={14} fontWeight={600} color="#22c55e" gutterBottom>
+              <Typography
+                fontSize={14}
+                fontWeight={600}
+                color="#22c55e"
+                gutterBottom
+              >
                 Total Revenue
               </Typography>
               <Typography variant="h4" fontWeight={700} color="#222">
                 ₹{totalRevenue.toLocaleString()}
               </Typography>
-             
             </CardContent>
           </Card>
         </Box>
@@ -251,9 +271,7 @@ const Dashboard = () => {
                                 (item) =>
                                   item.product &&
                                   item.product.category &&
-                                  item.product.category
-                                    .toLowerCase()
-                                    .includes("bamboo")
+                                  item.product.category === selectedCategory
                               )
                               .map(
                                 (item) =>

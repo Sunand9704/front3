@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -24,31 +24,13 @@ import {
   sendVendorOtp,
   verifyVendorOtp,
   resetVendorPassword,
+  fetchCategories,
 } from "../api";
 
 const LOGIN_URL = "http://localhost:8081/api/vendor/login";
 const SEND_OTP_URL = "http://localhost:8081/api/vendor/send-otp";
 const VERIFY_OTP_URL = "http://localhost:8081/api/vendor/verify-otp";
 const RESET_URL = "http://localhost:8081/api/vendor/reset-password";
-
-const CATEGORY_OPTIONS = [
- 
-  "Sanchi Stupa",
-  "Warli House",
-  "Tiger Crafting",
-  "Bamboo Peacock",
-  "Miniaure Ship",
-  "Bamboo Trophy",
-  "Bamboo Ganesha",
-  "Bamboo Swords",
-  "Tribal Mask -1",
-  "Tribal Mask -2",
-  "Bamboo Dry Fruit Tray",
-  "Bamboo Tissue Paper Holder",
-  "Bamboo Strip Tray",
-  "Bamboo Mobile Booster",
-  "Bamboo Card-Pen Holder"
-];
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -68,7 +50,27 @@ const Login = () => {
   const [resetMsg, setResetMsg] = useState("");
   const [resetError, setResetError] = useState("");
   const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        const categoriesData = await fetchCategories();
+        setCategories(categoriesData);
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+        setError("Failed to load categories. Please refresh the page.");
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const handleSubmit = async (e) => {
     console.log("DEBUG: Login form submitted");
@@ -203,12 +205,19 @@ const Login = () => {
                   value={category}
                   label="Category"
                   onChange={(e) => setCategory(e.target.value)}
+                  disabled={categoriesLoading}
                 >
-                  {CATEGORY_OPTIONS.map((cat) => (
-                    <MenuItem key={cat} value={cat}>
-                      {cat}
-                    </MenuItem>
-                  ))}
+                  {categoriesLoading ? (
+                    <MenuItem disabled>Loading categories...</MenuItem>
+                  ) : categories.length === 0 ? (
+                    <MenuItem disabled>No categories available</MenuItem>
+                  ) : (
+                    categories.map((cat) => (
+                      <MenuItem key={cat._id} value={cat.name}>
+                        {cat.name}
+                      </MenuItem>
+                    ))
+                  )}
                 </Select>
               </FormControl>
               <TextField
