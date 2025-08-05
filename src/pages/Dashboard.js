@@ -18,6 +18,16 @@ import {
   AppBar,
   Toolbar,
   Container,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
+  Grid,
+  List,
+  ListItem,
+  ListItemText,
+  Avatar,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { fetchAllOrders, updateOrderStatus } from "../api";
@@ -56,6 +66,8 @@ const Dashboard = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // Retrieve selected category from localStorage (set after login)
   const selectedCategory = localStorage.getItem("selectedCategory");
@@ -64,6 +76,17 @@ const Dashboard = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("selectedCategory");
     navigate("/login");
+  };
+
+  // Dialog handlers
+  const handleRowClick = (order) => {
+    setSelectedOrder(order);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setSelectedOrder(null);
   };
 
   // PATCH order status handler
@@ -92,8 +115,8 @@ const Dashboard = () => {
       try {
         const token = localStorage.getItem("token") || "YOUR_ADMIN_JWT_TOKEN";
         const data = await fetchAllOrders(token);
-        console.log(data , "data");
-        
+        console.log(data, "data");
+
         setOrders(data);
       } catch (err) {
         setError(err.message || "Error fetching orders");
@@ -111,8 +134,9 @@ const Dashboard = () => {
         order.items.some(
           (item) =>
             item.product &&
-            item.product.category &&
-            item.product.category.toLowerCase() === selectedCategory.toLowerCase()
+            item.category &&
+            item.category.toLowerCase() ===
+              selectedCategory.toLowerCase()
         )
       )
     : orders;
@@ -130,6 +154,249 @@ const Dashboard = () => {
   const revenueChange = 0;
 
   console.log(filteredOrders);
+
+  // Order Details Dialog Component
+  const OrderDetailsDialog = ({ open, order, onClose }) => {
+    if (!order) return null;
+
+    const formatDate = (dateString) => {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    };
+
+    return (
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            maxHeight: "90vh",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            bgcolor: "#f8f9fa",
+            borderBottom: "1px solid #e9ecef",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="h6" fontWeight={600}>
+            Order Details - #{order._id.slice(-8)}
+          </Typography>
+          <Chip
+            label={order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+            color={statusColor(order.status)}
+            size="small"
+          />
+        </DialogTitle>
+
+        <DialogContent sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            {/* Order Summary */}
+            <Grid item xs={12}>
+              <Card sx={{ mb: 2, bgcolor: "#f8f9fa" }}>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={600} mb={2}>
+                    Order Summary
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="body2" color="text.secondary">
+                        Order Date
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {formatDate(order.createdAt)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="body2" color="text.secondary">
+                        Total Amount
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight={500}
+                        color="primary"
+                      >
+                        ₹{order.totalAmount}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="body2" color="text.secondary">
+                        Payment Status
+                      </Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {order.paymentStatus || "Pending"}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="body2" color="text.secondary">
+                        Order Status
+                      </Typography>
+                      <Chip
+                        label={
+                          order.status.charAt(0).toUpperCase() +
+                          order.status.slice(1)
+                        }
+                        color={statusColor(order.status)}
+                        size="small"
+                      />
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Customer Information */}
+            <Grid item xs={12} md={6}>
+              <Card sx={{ height: "100%" }}>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={600} mb={2}>
+                    Customer Information
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <Avatar sx={{ mr: 2, bgcolor: "primary.main" }}>
+                      {order.user?.name?.charAt(0) || "U"}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body1" fontWeight={500}>
+                        {order.user?.name || "N/A"}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {order.user?.email || "N/A"}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Phone: {order.user?.phone || "N/A"}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Shipping Address */}
+            <Grid item xs={12} md={6}>
+              <Card sx={{ height: "100%" }}>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={600} mb={2}>
+                    Shipping Address
+                  </Typography>
+                  {order.address ? (
+                    <Box>
+                      <Typography variant="body1" fontWeight={500}>
+                        {order.user?.name || "N/A"}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {order.address.street}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {order.address.city}, {order.address.state}{" "}
+                        {order.address.pincode}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Phone: {order.user?.phone || ""}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No shipping address provided
+                    </Typography>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Order Items */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={600} mb={2}>
+                    Order Items
+                  </Typography>
+                  <List>
+                    {order.items.map((item, index) => (
+                      <React.Fragment key={index}>
+                        <ListItem sx={{ px: 0 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              width: "100%",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="body1" fontWeight={500}>
+                                {item.product?.name || "Product Name N/A"}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Category: {item.product?.category || "N/A"}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Quantity: {item.quantity}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ textAlign: "right" }}>
+                              <Typography variant="body1" fontWeight={500}>
+                                ₹{item.price || 0}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Total: ₹{item.price * item.quantity || 0}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </ListItem>
+                        {index < order.items.length - 1 && <Divider />}
+                      </React.Fragment>
+                    ))}
+                  </List>
+                  <Divider sx={{ my: 2 }} />
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography variant="h6" fontWeight={600}>
+                      Total Amount
+                    </Typography>
+                    <Typography variant="h6" fontWeight={600} color="primary">
+                      ₹{order.totalAmount}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 3, bgcolor: "#f8f9fa" }}>
+          <Button onClick={onClose} variant="outlined">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
 
   return (
     <Box sx={{ bgcolor: "#f4f6fa", minHeight: "100vh" }}>
@@ -261,7 +528,9 @@ const Dashboard = () => {
                           sx={{
                             "&:hover": { background: "#f5f7fa" },
                             transition: "background 0.2s",
+                            cursor: "pointer",
                           }}
+                          onClick={() => handleRowClick(order)}
                         >
                           <TableCell>{order._id}</TableCell>
                           <TableCell>{order.user?.name || "N/A"}</TableCell>
@@ -288,6 +557,7 @@ const Dashboard = () => {
                               onChange={(e) =>
                                 handleStatusChange(order._id, e.target.value)
                               }
+                              onClick={(e) => e.stopPropagation()}
                               disabled={updatingOrderId === order._id}
                               style={{
                                 padding: "4px 8px",
@@ -317,6 +587,13 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </Container>
+
+      {/* Order Details Dialog */}
+      <OrderDetailsDialog
+        open={dialogOpen}
+        order={selectedOrder}
+        onClose={handleCloseDialog}
+      />
     </Box>
   );
 };

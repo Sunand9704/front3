@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8081/api";
+const BASE_URL = "https://back3-728k.onrender.com/api";
 
 export async function loginVendor(email, password, category) {
   const response = await fetch(`${BASE_URL}/vendor/login`, {
